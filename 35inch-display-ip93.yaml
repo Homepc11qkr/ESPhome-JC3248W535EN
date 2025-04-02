@@ -1,0 +1,488 @@
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "9gn0oyn0We23zsih3l6MHryUa1vvjaRLcdW6p24OM0o="
+
+ota:
+  - platform: esphome
+    password: "59773ca1c89f95aee4fca94f8ad49eae"
+
+wifi:
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_password
+      bssid: "58:86:94:2A:4C:6C" # AX8004M 58:86:94:2A:4C:6C
+      # bssid: "58:86:94:88:E3:70" # A3-MU  58:86:94:88:E3:70
+      manual_ip:
+        static_ip: 192.168.0.93
+        gateway: 192.168.0.1
+        subnet: 255.255.255.0
+        dns1: 8.8.8.8
+        dns2: 8.8.4.4
+
+  ap:
+    ssid: "Fallback_AP"  # 연결 실패 시 생성될 AP 이름
+    password: "fallback_password"
+
+
+captive_portal:
+#################  =======================  wifi 연결후  화면보이게 작업 영역 ==============  
+substitutions:
+  tabview_name_0: "\U000F1443"
+  tabview_id_0: "demo"  
+  ## ------------------------------
+  tabview_name_1: "\U000F0EBA"
+  tabview_id_1: "Home_tab_1"  
+  ## ------------------------------
+  font_characters: " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#%'()+,-./:;<=>?@[]_{|}°²³↑↓♬⊙가거고경과관괄구금기나날남내냉너니늘다대데더도동드등라량러력로륨리릴마많맑매먼메명모목몰문미밖발방버번베보복볼북블비쁨사샤서선세센소속수스습시식신실씨아악안알앞어없에엘영오온옴옷외용우워원월위으음이인일자작장재저적전제조존좋주집체초최출침카커컴콜쾌탁탠터토통튼파팬폭풍퓨피한향험현호화흐름또는천둥개박무황강돌홈지정후치텍족성확람디택설청년은밤림눈바달난환"
+  font_25i_characters: " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#%'()+,-./:;<=>?@[]_{|}°²³↑↓♬⊙가나다라서에여영오외용우원월음절제종합부산텍린공휴탄네반모임머님광추석연글크힘호짜년생결혼념후정하대경도확민국흥덕로길디수성치통구인기날일보동세금스신고어사복작시개천한리마홈현충끝번"
+
+
+esphome:
+  name: 3-display-ip93  # 이름 지정 변경
+  friendly_name: 3-display-ip  # 이름 지정 변경
+  platformio_options:
+    upload_speed: 921600
+    board_build.flash_mode: dio
+    board_build.f_flash: 80000000L
+    board_build.f_cpu: 240000000L
+
+esp32:
+  board: esp32-s3-devkitc-1 # 기본 설치 이름
+  flash_size: 16MB
+  partitions: "default_16MB.csv" # 파티션 설정후 usb로 install
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240: "y"
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
+      CONFIG_SPIRAM_RODATA: y
+ 
+psram:
+  mode: octal # 파티션 설정후 usb로 install
+  speed: 80MHz # 120mhz is not supported and falls back to 40mhz # 파티션 설정후 usb로 install
+
+# Enable logging
+logger:
+  baud_rate: 921600 
+
+spi:
+  id: display_qspi
+  type: quad
+  clk_pin: 47
+  data_pins: [21, 48, 40, 39]
+
+i2c:
+  sda: 4
+  scl: 8
+  id: touchscreen_bus
+
+
+display:
+  - platform: qspi_dbi
+    model: axs15231
+    data_rate: 40MHz
+    id: my_display
+    spi_id: display_qspi
+    dimensions:
+      height: 480 # 기본세로 형태 터치 확인
+      width: 320 # 기본세로 형태 터치 확인
+    cs_pin: 45
+    rotation: 270 # 90 for landscape, 0 for portrait 터치 확인 270도 해야 함
+    #update_interval: never
+    auto_clear_enabled: false
+    #show_test_card: true # must enable update_interval, auto_clear_enable
+
+touchscreen:
+  - platform: axs15231
+    id: my_touch
+    display: my_display
+    i2c_id: touchscreen_bus
+    transform:
+      swap_xy: true
+      mirror_y: true
+    on_touch:
+      - lambda: |-
+          ESP_LOGI("cal", "x=%d, y=%d, x_raw=%d, y_raw=%0d",
+            touch.x,
+            touch.y,
+            touch.x_raw,
+            touch.y_raw
+          );
+
+output:
+  - platform: ledc
+    pin: GPIO1
+    id: backlight
+
+light:
+  - platform: monochromatic
+    output: backlight
+    name: "backlight Light" 
+    restore_mode: ALWAYS_ON
+
+# 폰트 설정
+font:
+  - file: "gfonts://Roboto"
+    id: roboto_100
+    size: 100
+
+  - file: "gfonts://Roboto"
+    id: roboto_70
+    size: 70
+  
+  - file: "gfonts://Roboto"
+    id: font_15
+    size: 15
+
+  - file: "fonts/MaruBuri-Bold.ttf"    
+    id: font_20
+    size: 20
+    bpp: 4    
+    glyphs: ${font_characters}
+
+  - file: "fonts/MaruBuri-Bold.ttf"    
+    id: font_21
+    size: 21
+    bpp: 4
+    glyphs: ${font_characters}
+
+  - file: "fonts/MaruBuri-Bold.ttf"   
+    id: font_22
+    size: 23
+    bpp: 4
+    glyphs: ${font_characters}
+    extras:
+      - file: 'fonts/materialdesignicons-webfont2.ttf' # http://materialdesignicons.com/cdn/7.4.47/  
+        glyphs: [
+          "\U000F0335", # mdi:lightbulb
+          "\U000F0336", # mdi-lightbulb-outline
+          "\U000F07C0", # mdi-desktop-classic
+          "\U000F097E",  #
+          "\U000F1A3A",  # fan
+          "\U000F1A25",  # 스위치
+          "\U000F057E", # 스피커
+          ]      
+
+  - file: "fonts/MaruBuri-Bold.ttf"    
+    id: font_25
+    size: 25
+    bpp: 4
+    glyphs: ${font_characters}
+    # U000F1443  하단 tabview 아이콘구성
+    extras:
+      - file: 'fonts/materialdesignicons-webfont2.ttf'  
+        glyphs: [
+          "\U000F1443", # 메뉴 demo
+          "\U000F0EBA", # tabview
+          ]  
+
+  - file: "fonts/MaruBuri-Bold.ttf"    
+    id: font_25i
+    size: 25
+    bpp: 4
+    glyphs: ${font_25i_characters}
+
+
+
+  - file: "fonts/MaruBuri-Bold.ttf"    
+    id: font_26
+    size: 26
+    bpp: 4
+    glyphs: ${font_characters}
+    extras:
+      - file: 'fonts/materialdesignicons-webfont2.ttf'  
+        glyphs: [
+          "\U000F0425", # power icon 
+          "\U000F057E", # 스피커
+          ]  
+
+  - file: "fonts/MaruBuri-Bold.ttf"    
+    id: font_30
+    size: 30
+    bpp: 4
+    glyphs: ${font_characters}
+
+
+  - file: "fonts/MaruBuri-Bold.ttf"    
+    id: font_40
+    size: 40
+    bpp: 4
+    glyphs: ${font_characters}  
+    extras:
+      - file: 'fonts/materialdesignicons-webfont2.ttf' # materialdesignicons-webfonts.ttf' # http://materialdesignicons.com/cdn/7.4.47/ 
+        glyphs: [
+          "\U000F0318", # ap-connected
+          "\U000F0319",  # ap-disconnected
+          "\U000F0128", # chart bar icon 1       
+          "\U000F0335", # lightbulb 2
+          "\U000F0F54", #  button3 temp
+          "\U000F0439", # 라디오 4번 BUTTON4
+          "\U000F0493", # setting icon 5
+          "\U000F0D90", # off
+          "\U000F1452", # # time 7 icon
+          "\U000F02DC", # home-icon 1
+          "\U000F0425", # power icon 
+          "\U000F0FA8", #  절전 on lbl_idle_screen_timeout_check_on
+          "\U000F0E71", # ALARM ICON 알람아이콘
+          "\U000F16C5",  # wifi_disconnected
+          "\U000F05A9",  # wifi connect 
+          "\U000F092F", # wifi 0% 
+          "\U000F091F", # wifi 40% 
+          "\U000F0922", # wifi 60% 
+          "\U000F0925", # wifi 80% 
+          "\U000F0928", # wifi 100% 
+          "\U000F05CE", # ScreenOff[x]
+          ]
+# --------------------------------------------------
+
+
+lvgl:
+  style_definitions: # lvgl에 설정
+    # 외곽선용 큰 글자 스타일 (검정색)
+    - id: style_text_outline
+      text_color: 0x000000        # 외곽선 색상 (검정)
+      bg_opa: TRANSP              # 배경을 투명하게 설정
+
+    # 내부 실제 텍스트 스타일 (흰색)
+    - id: style_inner_text
+      text_color: 0xFFFFFF        # 텍스트 색상 (흰색)
+      bg_opa: TRANSP              # 배경 투명하게 설정
+
+    # 텍스트를 감싸는 박스 스타일
+    - id: style_box
+      bg_color: 0x222222          # 배경 색상
+      bg_opa: COVER               # 배경 투명도 설정 (COVER는 완전히 덮음)
+      radius: 20                  # 모서리 반경
+      border_width: 2             # 박스 외곽선 두께
+      border_color: 0x000000      # 박스 외곽선 색상 (검정)
+      pad_all: 10                 # 박스 내부 여백
+
+    - id: style_weather_bottom
+      text_color: 0xD5D5D5
+      bg_color: 0
+      bg_opa: TRANSP
+      border_color: 0xE9E9E9      
+      border_width: 0
+      radius: 0
+      pad_all: 0
+
+    - id: style_card
+      text_color: 0xD5D5D5
+      bg_color: 0x222222
+      bg_opa: COVER
+      radius: 20
+      outline_width: 0
+      border_width: 0
+      #border_opa:
+      pad_all: 0
+    
+    - id: style_header_footer_top
+      # text_font: font_15
+      text_color: 0xD5D5D5
+      bg_color: 0
+      bg_opa: TRANSP
+      border_opa: TRANSP
+      radius: 0
+      pad_all: 0
+      shadow_opa: TRANSP
+      width: 100%
+
+    - id: style_1card  # 카드 위젯의 고유 ID
+      text_color: 0xD5D5D5  # 텍스트 색상: 연한 회색 (hex 코드로 표현)
+      bg_color: 0x222222  # 배경 색상: 어두운 회색/검정 (hex 코드로 표현)
+      bg_opa: 30% #COVER  # 배경의 불투명도 설정 (COVER는 완전 불투명)
+      radius: 10  # 모서리 반경: 카드 모서리가 둥글게 처리되는 정도 (픽셀 단위)
+      outline_width: 0  # 외곽선 너비: 외곽선의 두께 (픽셀 단위)
+      border_width: 0  # 테두리 너비: 테두리의 두께 (픽셀 단위)
+      border_opa: 0%  # 테두리의 불투명도 설정 (주석 처리됨)
+      pad_all: 0  # 전체 여백 설정: 모든 방향에서의 여백 (픽셀 단위)
+
+    - id: style_2card  # 카드 위젯의 고유 ID
+      # text_color: 0xD5D5D5  # 텍스트 색상: 연한 회색 (hex 코드로 표현)
+      bg_color: 0x222222  # 배경 색상: 어두운 회색/검정 (hex 코드로 표현)
+      bg_opa: 88% #COVER  # 배경의 불투명도 설정 (COVER는 완전 불투명)
+      radius: 10  # 모서리 반경: 카드 모서리가 둥글게 처리되는 정도 (픽셀 단위)
+      outline_width: 0  # 외곽선 너비: 외곽선의 두께 (픽셀 단위)
+      border_width: 0  # 테두리 너비: 테두리의 두께 (픽셀 단위)
+      border_opa: 0%  # 테두리의 불투명도 설정 (주석 처리됨)
+      pad_all: 0  # 전체 여백 설정: 모든 방향에서의 여백 (픽셀 단위)
+      # 설명
+
+    - id: style_tab_theme # tab_theme # style_tab_theme
+      border_width: 0
+      border_color: 0x0077b3
+      border_opa: TRANSP
+      bg_color: 0x2F8CD8
+      bg_grad_color: 0x005782                  
+      bg_grad_dir: VER
+      pad_all: 0                  
+      width: 100%
+      height: 50
+      text_font: font_26
+      text_align: CENTER
+
+    - id: style_weather_top
+      text_color: 0xD5D5D5
+      bg_color: 0
+      bg_opa: TRANSP
+      border_side: 
+        - top
+        - bottom
+      border_color: 0xE9E9E9
+      border_width: 3
+      #border_opa:
+      radius: 0
+      pad_all: 0
+      shadow_width: 0
+      shadow_opa: TRANSP
+
+    - id: style_time
+      text_color: 0xD5D5D5
+      bg_opa: TRANSP
+      radius: 5
+      border_color: 0xE9E9E9
+      border_width: 0
+      #border_opa:
+      pad_all: 0
+      shadow_width: 0
+      shadow_opa: TRANSP        
+#### ====================================================        
+  #full_refresh: true # not needed any longer
+  draw_rounding: 8 # necessary for the axs15231 display controller
+  displays: my_display
+  touchscreens: my_touch
+  bg_color: 0
+  border_width: 0
+  outline_width: 0
+  theme:
+    bar:
+      radius: 0
+      indicator:
+        radius: 0
+        arc_color: red
+# =================  모든 위젯 설정 =========================        
+  pages:
+    - id: menu_page
+      widgets:
+####888888888888888888888888888888888888
+      - obj:
+          x: 0
+          y: 0
+          align: TOP_LEFT
+          styles: style_card
+          width: 100%
+          height: 100%
+          widgets:            
+            - tabview:  # 탭뷰 하단메뉴 표시
+                id: widgets_page_tap
+                position: bottom
+                styles: style_card
+                
+                tab_style:
+                  styles: style_card
+                  items:
+                    text_color: 0xE5E5E5
+                    text_font: font_25
+                    height: 30                    
+                    pressed:
+                      text_color: 0xE5E5E5
+                    checked: 
+                      text_color: 0xF7F703
+                tabs:
+# ==================>==================================================  
+## ============  추가적으로 계속복사 메뉴 복사 =========================
+                  - name: ${tabview_name_0} #  U000F1443 font및 상단
+                    id: ${tabview_id_0} #  
+# ==================>=================================================              
+                    widgets:
+                    - obj:
+                        x: 0
+                        y: 0
+                        align: TOP_LEFT          
+                        bg_color: 0x000000
+                        bg_opa: 30%
+                        styles: style_time
+                        width: 100%
+                        height: 100%  
+                        widgets:  
+                            # - image:
+                            #     id: background_bg_id2
+                            #     x: !lambda 'return id(img_x_pos);'
+                            #     y: 5
+                            #     width: 480
+                            #     height: 470
+                            #     src: background_bg_id
+                            #     antialias: true
+                            #     styles: style_card
+### 999999999999999999999999999999999999999999999999999999999999999999999999999999
+                            - obj:
+                                x: 0
+                                y: 0
+                                align: TOP_LEFT          
+                                bg_color: 0x000000
+                                bg_opa: 30%
+                                styles: style_time
+                                width: 100%
+                                height: 100%
+                                widgets:       
+##### 9999999999999999999999999999999999999999999999999999999999999999999999999999
+                                  - label:
+                                      align: TOP_MID
+                                      y: 2 # distance down from top
+                                      text: 'Battery Power kW'
+                                  - bar:
+                                      align: TOP_MID
+                                      x: 0
+                                      y: 20 # distance down from top
+                                      id: bar_power
+                                      indicator:
+                                        arc_color: green
+                                        radius: 0
+                                      mode: symmetrical
+                                      arc_color: blue
+                                      value: 25
+                                      width: 320
+                                      height: 20
+                                      min_value: -50
+                                      max_value: 100
+
+                                  - label:
+                                      align: TOP_MID
+                                      y: 50 # distance down from top
+                                      text: 'Battery Volts'
+
+                                  - spinner:
+                                      align: TOP_MID
+                                      x: 0
+                                      y: 100
+                                      spin_time: 5s
+                                      arc_length: 20deg
+                                      arc_color: 0x00ff00
+                                      id: spinner_id
+                                      indicator:
+                                        arc_color: 0xff0000
+ 
+## ============  추가적으로 탭뷰 형식으로 계속복사 =====================
+                  - name: ${tabview_name_1} #  U000F1443
+                    id: ${tabview_id_1} #  
+# ==================>=========================================              
+                    widgets:
+                    - obj:
+                        x: 0
+                        y: 0
+                        align: TOP_LEFT          
+                        bg_color: 0x000000
+                        bg_opa: 30%
+                        styles: style_time
+                        width: 100%
+                        height: 100%  
+                        widgets:  
+                  #####999999999999999999999999999999999999 버튼및 메뉴 구성 
+                          - label:
+                              align: TOP_MID
+                              y: 2 # distance down from top
+                              text: 'top_name'
+                              
