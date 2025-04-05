@@ -80,20 +80,35 @@ i2c:
   id: touchscreen_bus
 
 
+# display:
+#   - platform: qspi_dbi
+#     model: axs15231
+#     data_rate: 40MHz
+#     id: my_display
+#     spi_id: display_qspi
+#     dimensions:
+#       height: 480 # 기본세로 형태 터치 확인
+#       width: 320 # 기본세로 형태 터치 확인
+#     cs_pin: 45
+#     rotation: 270 # 90 for landscape, 0 for portrait 터치 확인 270도 해야 함
+#     #update_interval: never
+#     auto_clear_enabled: false
+#     #show_test_card: true # must enable update_interval, auto_clear_enable
 display:
-  - platform: qspi_dbi
-    model: axs15231
-    data_rate: 40MHz
-    id: my_display
-    spi_id: display_qspi
-    dimensions:
-      height: 480 # 기본세로 형태 터치 확인
-      width: 320 # 기본세로 형태 터치 확인
-    cs_pin: 45
-    rotation: 270 # 90 for landscape, 0 for portrait 터치 확인 270도 해야 함
-    #update_interval: never
-    auto_clear_enabled: false
-    #show_test_card: true # must enable update_interval, auto_clear_enable
+- platform: qspi_dbi
+  model: axs15231
+  data_rate: 40MHz
+  id: my_display
+  spi_id: display_qspi
+  dimensions:
+    height: 480
+    width: 320
+  cs_pin: 45
+  rotation: 90 # 90 for landscape, 0 for portrait
+  update_interval: never
+  auto_clear_enabled: false
+  # auto_clear_enabled: true
+  # show_test_card: true # must enable update_interval, auto_clear_enable
 
 touchscreen:
   - platform: axs15231
@@ -101,8 +116,10 @@ touchscreen:
     display: my_display
     i2c_id: touchscreen_bus
     transform:
-      swap_xy: true
-      mirror_y: true
+      # swap_xy: true
+      # mirror_y: true
+      swap_xy: true  # X와 Y를 교체 (90도 회전에 맞춤)
+      mirror_x: true # X축 반전하여 올바른 위치로 이동      
     on_touch:
       - lambda: |-
           ESP_LOGI("cal", "x=%d, y=%d, x_raw=%d, y_raw=%0d",
