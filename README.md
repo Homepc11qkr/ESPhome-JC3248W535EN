@@ -17,3 +17,19 @@ Display can be purchased here: https://s.click.aliexpress.com/e/_DFO5uIV
 ![JC3248W535-1](https://github.com/user-attachments/assets/8bbe643f-7f15-479f-958d-1e601d22e327)
 
 ![JC3248W535-2](https://github.com/user-attachments/assets/5ced7374-3ca7-42e9-bc00-cb662bc2396b)
+
+
+
+esphome 으로 yaml 파일로  lvgl 3.5 인치  구성 
+
+3.5인치 작업 설치 )LVGL ESP32-S3 3.5인치 용량성 터치 IPS 모듈 8M PSRAM 16M 플래시 Arduino LVGL 개발 320*480
+
+작업 일지
+1)초기작업
+https://cafe.naver.com/homestation/261
+2)화면 보기
+https://cafe.naver.com/homestation/265
+3)작업설치
+https://cafe.naver.com/homestation/268
+
+update > 2025_0405_1604_12
