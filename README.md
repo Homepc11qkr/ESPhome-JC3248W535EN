@@ -37,4 +37,7 @@ https://cafe.naver.com/homestation/268
 4) 3.5인치 사운드 출력 성공 )LVGL ESP32-S3 3.5인치 320*480 AUDIO 출력 구성
 https://cafe.naver.com/homestation/345
 
-update > 2025_0405_1604_12  >  ESPHOME 25.5 VER >> 2025_0525_0044_27
+update 
+> 2025_0405_1604_12  
+>> ESPHOME 25.5 VER >> 2025_0525_0044_27 
+>> audio out >>2025_0525_0227_11
