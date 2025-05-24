@@ -1,1 +1,88 @@
-..NONE
+
+3.5인치 사운드 출력 성공 )LVGL ESP32-S3 3.5인치 320*480 AUDIO 출력 구성
+
+https://cafe.naver.com/homestation/345
+
+
+
+i2s_audio:
+    i2s_lrclk_pin: GPIO2
+    i2s_bclk_pin: GPIO42
+    #  i2s_dout_pin: GPIO41
+speaker:
+  - platform: i2s_audio
+    id: speaker_id
+    dac_type: external
+    i2s_dout_pin: GPIO41
+    sample_rate: 48000
+
+  - platform: mixer
+    id: mixer_speaker_id
+    output_speaker: speaker_id
+    source_speakers:
+      - id: announcement_spk_mixer_input
+      - id: media_spk_mixer_input
+
+  - platform: resampler
+    id: media_spk_resampling_input
+    output_speaker: media_spk_mixer_input
+
+  - platform: resampler
+    id: announcement_spk_resampling_input
+    output_speaker: announcement_spk_mixer_input
+
+ 
+media_player:
+  - platform: speaker
+    name: "Speaker Media Player"
+    id: media_player_pcm5102_id
+    media_pipeline:
+        speaker: media_spk_resampling_input
+        num_channels: 1
+    announcement_pipeline:
+        speaker: announcement_spk_resampling_input
+        num_channels: 1
+    files:
+      - id: alarm_sound
+        file: alarm.flac # Placed in the yaml directory. Should be encoded with a 48000 Hz sample rate, mono or stereo audio, and 16 bits per sample.
+
+        # https://docs.espressif.com/projects/esp-adf/en/latest/design-guide/audio-samples.html
+        # https://helpguide.sony.net/high-res/sample1/v1/en/index.html?utm_source=chatgpt.com
+
+
+# --------------------------------------
+switch:
+  - platform: template
+    name: "Ring Timer"
+    id: timer_ringing
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    on_turn_off:
+        # Stop playing the alarm
+        - media_player.stop:
+            announcement: true
+        - mixer_speaker.apply_ducking:  # Stop ducking the media stream over 2 seconds
+            id: media_spk_mixer_input
+            decibel_reduction: 0
+            duration: 2.0s
+    on_turn_on:
+        # Duck media audio by 20 decibels instantly
+        - mixer_speaker.apply_ducking:
+            id: media_spk_mixer_input
+            decibel_reduction: 20
+            duration: 0.0s
+        - while:
+            condition:
+                switch.is_on: timer_ringing
+            then:
+                # Play the alarm sound as an announcement
+                - media_player.speaker.play_on_device_media_file:
+                    media_file: alarm_sound
+                    announcement: true
+                # Wait until the alarm sound starts playing
+                - wait_until:
+                    media_player.is_announcing:
+                # Wait until the alarm sound stops playing
+                - wait_until:
+                    not:
+                      media_player.is_announcing:
