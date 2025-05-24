@@ -20,6 +20,8 @@ Display can be purchased here: https://s.click.aliexpress.com/e/_DFO5uIV
 
 ![image](https://github.com/user-attachments/assets/42072f41-5b63-4ae7-998a-1116b069fa54)
 
+![image](https://github.com/user-attachments/assets/47d92c88-d1bc-4007-aac4-d592c234fc0a)
+
 
 esphome 으로 yaml 파일로  lvgl 3.5 인치  구성 
 
@@ -32,5 +34,7 @@ https://cafe.naver.com/homestation/261
 https://cafe.naver.com/homestation/265
 3)작업설치
 https://cafe.naver.com/homestation/268
+4) 3.5인치 사운드 출력 성공 )LVGL ESP32-S3 3.5인치 320*480 AUDIO 출력 구성
+https://cafe.naver.com/homestation/345
 
 update > 2025_0405_1604_12  >  ESPHOME 25.5 VER >> 2025_0525_0044_27
